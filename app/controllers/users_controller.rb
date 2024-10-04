@@ -9,34 +9,37 @@ class UsersController < ApplicationController
   
 
   def create
-
+    # フォームの内容からuserインスタンス作成
     @user = User.new(user_params)
 
     # ユーザのログインが完了したら悲観的ロックを適用
+    # userインスタンスの保存
     if @user.save
-      # ログインする
+      # 自動ログインする
       log_in(@user)
 
+      # トランザクションの開始
       ActiveRecord::Base.transaction do
 
 
         @orders = Order.find_by(id: params[:order_id])
 
-        # @ordersがnilかどうか確認
+        # @ordersがnilかどうか確認し、注文に失敗していたら以降が実行される
         if @orders.nil?
+          # 注文が無ければ以下を表示
           flash[:error] = "Order not found"
+
+          #新規ユーザ
           render :new
 
-          raise ActiveRecord::Rollback  # トランザクションをロールバック
-            # 商品を購入不可に更新する
-            @orders.update!(available: false)
+          # 今までのトランザクションをロールバック
+          raise ActiveRecord::Rollback 
           
-
-          # 成功時のリダイレクト
-          redirect_to new_order_path
+        # 注文に成功した場合
         else
-          # ユーザーの登録に失敗した場合の処理
-          render :new
+            # 商品を購入不可に更新する
+          @orders.update!(available: false)
+          redirect_to new_order_path
         end
       end
     end
