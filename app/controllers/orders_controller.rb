@@ -21,7 +21,6 @@ class OrdersController < ApplicationController
       @order.update_total_quantity
     end
     redirect_to orders_path
-    
   end
 
   private
