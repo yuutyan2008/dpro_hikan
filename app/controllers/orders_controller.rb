@@ -11,7 +11,7 @@ class OrdersController < ApplicationController
 
   def create
     ActiveRecord::Base.transaction do
-      @order = current_user.orders.find_by(id: params[:order_id])
+      @order = current_user.orders.lock.find_by(id: params[:order_id])
     
       if @order.nil?
         @order = current_user.orders.build(order_params)
